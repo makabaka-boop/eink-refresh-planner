@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>电子纸刷新规划 · 48×48 / 3×3 瓦片</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>电子纸刷新规划</h1>
+  <span class="sub">48×48 黑白像素 · 固定 3×3 瓦片（每块 16×16）· 至多 20 帧 · 离线求解</span>
+  <span class="spacer"></span>
+  <span id="solveStatus" class="status"><span class="dot"></span><span class="txt">空闲</span></span>
+</header>
+
+<main class="layout">
+  <!-- 左：编辑 -->
+  <div>
+    <section class="panel">
+      <h2>帧编辑</h2>
+      <div class="editor-wrap">
+        <div class="stage">
+          <canvas id="editor" width="48" height="48"></canvas>
+          <div class="grid-overlay"></div>
+          <div class="tile-overlay" id="tileOverlay"></div>
+        </div>
+        <div class="editor-side">
+          <div class="toolbar">
+            <button data-tool="black" class="tool active" id="toolBlack">● 涂墨</button>
+            <button data-tool="white" class="tool" id="toolWhite">○ 擦白</button>
+          </div>
+          <div class="toolbar">
+            <button id="invertBtn" title="整帧黑白反相">反相</button>
+            <button id="clearFrameBtn" class="danger">清空本帧</button>
+          </div>
+          <p class="hint">在像素格上按住拖动即可绘制；粗线为 3×3 瓦片边界。蓝框表示本帧将被局刷的瓦片，红底表示全刷。</p>
+          <p class="hint" id="frameEditHint"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>帧序列（<span id="frameCountNum">0</span>/20）</h2>
+      <div class="frame-strip" id="frameStrip"></div>
+      <div class="toolbar">
+        <button id="addFrameBtn" class="primary">＋ 复制当前帧新建</button>
+        <button id="addBlankBtn">＋ 空白帧</button>
+        <button id="dupFrameBtn">复制选中帧</button>
+        <button id="delFrameBtn" class="danger">删除选中帧</button>
+        <button id="demoBtn" style="margin-left:auto">载入演示</button>
+        <button id="resetBtn" class="danger">全部清空</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 右：方案与播放 -->
+  <div>
+    <section class="panel">
+      <h2>整段最优方案（Worker 全局动态规划）</h2>
+      <div id="solutionBody">
+        <p class="muted">添加帧后自动在整段序列上求解；编辑期间旧的 Worker 结果会被丢弃。</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>逐帧核对</h2>
+      <div id="stepsBody">
+        <p class="muted">尚无方案。</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>播放</h2>
+      <div class="player-wrap">
+        <div class="player-stage">
+          <canvas id="player" width="48" height="48"></canvas>
+          <div class="grid-overlay"></div>
+        </div>
+        <div class="player-info">
+          <div class="frame-label">帧 <b id="pvFrame">–</b> <span id="pvTotal"></span></div>
+          <div class="player-controls">
+            <button id="pvFirst" title="回到初始全白">⏮</button>
+            <button id="pvPrev">◀</button>
+            <button id="pvPlay">▶ 播放</button>
+            <button id="pvNext">▶</button>
+          </div>
+          <div id="pvAction"></div>
+          <div id="pvCounters"></div>
+          <div class="totals">
+            <div class="t">累计费用 <b id="pvCost">0</b></div>
+            <div class="t">全刷次数 <b id="pvFulls">0</b></div>
+          </div>
+          <div id="pvStale"></div>
+          <div class="toolbar" style="margin-top:8px">
+            <button id="exportBtn" disabled>导出 JSON（与播放共用同一份结果）</button>
+          </div>
+          <p class="rule-note">
+            全刷 600，全部瓦片残影计数清零；局刷按“30＋该瓦片改变像素数”逐块计费，被刷瓦片计数加一；计数到 2 的瓦片下一帧若仍变化则必须全刷。
+            方案在全部 2<sup>N</sup> 条动作序列上按 总费用 → 全刷次数 → 逐帧“全刷(F)先于局刷(P)” 裁决。
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="js/solver.js"></script>
+<script src="js/solver-client.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

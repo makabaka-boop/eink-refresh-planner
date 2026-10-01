@@ -1,0 +1,9 @@
+{
+  "name": "epaper-refresh-planner",
+  "version": "1.0.0",
+  "description": "离线电子纸刷新规划：48x48 黑白像素 / 3x3 瓦片，整段帧序列总费用最优规划",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  }
+}
